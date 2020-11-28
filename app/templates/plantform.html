@@ -1,0 +1,194 @@
+{% extends "template.html" %}
+
+{% block plantform %}
+<form method="POST" id="plantform" name="plantform" action="{{ url_for('index') }}">
+    <section>
+        <select class="selectpicker"  title="Soortplant"  name="soortplant"  >
+            {% for o in soortplant %}
+            <option value="{{ o.name }}">{{ o.name }}</option>
+            {% endfor %}
+        </select>
+
+        <select class="selectpicker"  title="Bodemvereisten"  name="bodemvereisten" multiple >
+            {% for o in bodemvereisten %}
+            <option value="{{ o.name }}">{{ o.name }}</option>
+            {% endfor %}
+        </select>
+
+        <select class="selectpicker"  title="Zon/Schaduw" name="zonschaduw" multiple >
+            {% for o in zonschaduw %}
+            <option value="{{ o.name }}">{{ o.name }}</option>
+            {% endfor %}
+        </select>
+
+        <select class="selectpicker"  title="Bloei"  name="bloei" multiple >
+            {% for o in bloei %}
+            <option value="{{ o.name }}">{{ o.name }}</option>
+            {% endfor %}
+        </select>
+        <!--
+        <select class="selectpicker"  title="Vermeerdering" data-style="btn-success"  name="vermeerdering"  >
+            {% for o in vermeerdering %}
+            <option value="{{ o.name }}">{{ o.name }}</option>
+            {% endfor %}
+        </select>-->
+    </section>
+
+    <br />
+
+    <section>
+        <div class="row align-items-center justify-content-between">
+
+        <div class="col-12 col-md-4">
+            <input type="submit" value="Maak fiches" name="submit" class="btn btn-primary" />
+            <input type="submit" value="Filter planten" name="submit" class="btn btn-success" />
+        </div>
+        <div class="col-12 col-md-8" align="right">
+            <input type="submit" id="resetForm"  value="Reset" class="btn btn-warning" />
+        </div>
+        </div>
+    </section>
+
+  <!--</form>-->
+
+  <script>
+
+    </script>    
+{% endblock %}
+
+
+{% block planttabel %}
+<br />
+<div class="row align-items-center justify-content-between">
+    <div class="col-12 col-sm-4">
+        <div class="single-benefits-area">
+            <img src="/static/img/core-img/b1.png" alt="">
+            <h5>Totaal Aantal Planten</h5>
+            <p>{{ aantal_planten }} planten geselecteerd</p>
+        </div>
+    </div>
+    <div class="col-12 col-sm-8">
+        {% if pagesubtitle %}
+            <div class="single-benefits-area">
+                <img src="/static/img/core-img/b4.png" alt="">
+                <h5>{{ pagesubtitle }}</h5>
+                <p>
+                {% if pagesubtype == 'fiches' %}
+                    <a target="_blank" href="{{ pagesubbekijkfiches }}" class="btn btn-info nohover" id="nohover">Bekijk de fiches</a> &nbsp;
+                {% endif %}
+                {{ pagesubcontent }}</p>
+            </div>
+        {% endif %}
+    </div>    
+</div>
+
+<div>
+    <div class="row align-items-center justify-content-between"> 
+        <div class="clearfix" border="1px solid black">
+            <table class="table" width="100%" >
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" checked></th>
+                        <th nowrap>Plantnaam <i class="fas fa-arrow-down"></i></th>
+                        <th>Soort</th>
+                        <th>Hoogte</th>
+                        <th>Bodem</th>
+                        <th>Zon/Schaduw</th>
+                        <th>Bloei</th>
+                        <th>Kleur</th>
+                        <th>Blad</th>
+                        <!--<th>Vermeerdering</th>-->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!--<form>-->
+                    {% for o in planttabel %}
+                        <tr>
+                            <td><input type="checkbox" name="plantid[]" value="{{ o.id }}" checked></td>
+                            <td nowrap>
+                                <!--{% if o.foto %}
+                                    
+                                <a id="pop"  href="{{ o.foto[0] | replace("open?id=","uc?id=") }}"><i class="fas fa-images"></i>
+                                    
+                                {% endif %}-->
+                                {{ o.plantnaamlt }} <br /> ({{ o.plantnaamnl }} )
+                                <!--{% if o.foto_ %}
+                                    </a>
+                                {% endif %}-->
+                            </td>
+                            <td>{{ o.soortplant }}</td>
+                            <td>{{ o.hoogte }}</td>
+                            <td>{{ o.bodemvereisten }}</td>
+                            <td>{{ o.zonschaduw }}</td>
+                            <td>{{ o.bloei }}</td>
+                            <td>{{ o.bloeikleur }}</td>
+                            <td>{{ o.bladvorm }}</td>
+                            <!--<td>{{ o.vermeerdering }}</td>-->
+                        </tr>
+                    {% endfor %}
+                    </form>
+            </tbody>      
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Creates the bootstrap modal where the image will appear -->
+<div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        </div>
+        <div class="modal-body">
+          <img src="" id="imagepreview" style="width: 400px; height: 264px;" >
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block plantscript %}
+<script>
+/*
+!function(t){t.fn.barfiller=function(i){var n,e,o=t.extend({barColor:"#16b597",tooltip:!0,duration:1e3,animateOnResize:!0,symbol:"%"},i),a=t(this),r=t.extend(o,i),s=a.width(),l=a.find(".fill"),u=a.find(".tip"),d=l.attr("data-percentage"),c=!1,f={init:function(){return this.each(function(){f.getTransitionSupport()&&(c=!0,e=f.getTransitionPrefix()),f.appendHTML(),f.setEventHandlers(),f.initializeItems()})},appendHTML:function(){l.css("background",r.barColor),r.tooltip||u.css("display","none"),u.text(d+r.symbol)},setEventHandlers:function(){r.animateOnResize&&t(window).on("resize",function(t){clearTimeout(n),n=setTimeout(function(){f.refill()},300)})},initializeItems:function(){var t=f.calculateFill(d);a.find(".tipWrap").css({display:"inline"}),c?f.transitionFill(t):f.animateFill(t)},getTransitionSupport:function(){var t=(document.body||document.documentElement).style;return void 0!==t.transition||void 0!==t.WebkitTransition||void 0!==t.MozTransition||void 0!==t.MsTransition||void 0!==t.OTransition},getTransitionPrefix:function(){return/mozilla/.test(navigator.userAgent.toLowerCase())&&!/webkit/.test(navigator.userAgent.toLowerCase())?"-moz-transition":/webkit/.test(navigator.userAgent.toLowerCase())?"-webkit-transition":/opera/.test(navigator.userAgent.toLowerCase())?"-o-transition":/msie/.test(navigator.userAgent.toLowerCase())?"-ms-transition":"transition"},getTransition:function(t,i,n){var o;return"width"===n?o={width:t}:"left"===n&&(o={left:t}),i/=1e3,o[e]=n+" "+i+"s ease-in-out",o},refill:function(){l.css("width",0),u.css("left",0),s=a.width(),f.initializeItems()},calculateFill:function(t){return s*(t*=.01)},transitionFill:function(t){var i=t-u.width();l.css(f.getTransition(t,r.duration,"width")),u.css(f.getTransition(i,r.duration,"left"))},animateFill:function(t){var i=t-u.width();l.stop().animate({width:"+="+t},r.duration),u.stop().animate({left:"+="+i},r.duration)}};return f[i]?f[i].apply(this,Array.prototype.slice.call(arguments,1)):"object"!=typeof i&&i?void t.error('Method "'+method+'" does not exist in barfiller plugin!'):f.init.apply(this)}}(jQuery);
+
+$('#bar_zon').barfiller({
+    tooltip: true,
+    duration: 1000,
+    barColor: '#70c745',
+    animateOnResize: true
+});
+
+$('#bar_schaduw').barfiller({
+    tooltip: true,
+    duration: 1000,
+    barColor: '#70c745',
+    animateOnResize: true
+});
+
+$('#bar_zonschaduw').barfiller({
+    tooltip: true,
+    duration: 1000,
+    barColor: '#70c745',
+    animateOnResize: true
+});
+*/
+$(function() {
+    $('#pop').on('click', function() {
+        $('#imagepreview').attr('src', $(this).attr('href'));
+        $('#imagemodal').modal('show');   
+        return false;
+    });		
+});
+
+$("#selectAll").click(function(){
+        $("input[type=checkbox]").prop('checked', $(this).prop('checked'));
+
+});
+
+</script>
+{% endblock %}
