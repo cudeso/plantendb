@@ -11,6 +11,8 @@ def merge_plantenfiches(lijst_planten, delete_old = True):
         if aantal_planten > 0:
             planten = GooglePlanten()
 
+            #planten.update_sheet_last_editor()
+
             # Delete old
             if delete_old:
                 planten.delete_fiches()
@@ -31,10 +33,12 @@ def merge_plantenfiches(lijst_planten, delete_old = True):
                             foto_array=[ plant.get("foto") ]
 
                         indexpos = False
-                        '''for f in foto_array:
+                        for f in foto_array:
                             image = f
                             print("Change perm: %s" % (image))
-                            planten.set_permissions_image(image)'''
+                            planten.set_permissions_image(image)
+                            
+                        time.sleep(2)
                         for f in foto_array:
                             image = f 
                             # Lookup the indexid in the document
@@ -44,9 +48,9 @@ def merge_plantenfiches(lijst_planten, delete_old = True):
                                 indexpos += 1
                             if indexpos:
                                 # Replace the image
-                                print("1/--- Indexpos: %s Document: %s Image: %s" % (indexpos, merged_document_id, image))
-                                planten.set_permissions_image(image)
-                                time.sleep(2)
+                                #print("1/--- Indexpos: %s Document: %s Image: %s" % (indexpos, merged_document_id, image))
+                                #planten.set_permissions_image(image)
+                                
                                 image_uc = image.replace("open?id=","uc?id=")
                                 print("2/--- Indexpos: %s Document: %s Image: %s Image_uc: %s" % (indexpos, merged_document_id, image, image_uc))
                                 planten.replace_placeholder_image(merged_document_id, image, image_uc, indexpos)

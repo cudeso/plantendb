@@ -62,7 +62,7 @@ def index():
             selected_fiches = request.form.getlist('plantid[]')
             aantal_gemaakte_fiches = 0
             if selected_fiches and len(selected_fiches) > 0:
-                planten.update_sheet_last_editor()
+
                 result, aantal_gemaakte_fiches = merge_plantenfiches(selected_fiches)
                 if result:
                     pagesubtitle = "Fiches zijn aangemaakt"

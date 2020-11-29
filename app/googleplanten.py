@@ -21,6 +21,7 @@ class GooglePlanten():
         self.TOKEN_STORE_FILE = 'token.json'
         self.SCOPES = (  # iterable or space-delimited string
                 'https://www.googleapis.com/auth/drive',
+               # 'https://www.googleapis.com/auth/drive.file',
                 'https://www.googleapis.com/auth/documents',
                 'https://www.googleapis.com/auth/spreadsheets.readonly',
         )
@@ -94,6 +95,7 @@ class GooglePlanten():
 
     def replace_placeholder_image(self, documentid, image, image_uc, indexpos):
         IMAGE_SIZE = 120
+
         # Add the image
         image = image.strip()
         image_uc = image_uc.strip()
@@ -112,28 +114,11 @@ class GooglePlanten():
 
             }
         }] 
-        '''
-        requests = [{
-            'insertInlineImage': {
-                'uri': '%s' % image_uc,
-                'objectSize': {
-                    'height': {
-                        'magnitude': '%s' % IMAGE_SIZE,
-                        'unit': 'PT'
-                    },
-                    'width': {
-                        'magnitude': '%s' % IMAGE_SIZE,
-                        'unit': 'PT'
-                    }
-                },
-                'location': {
-                    'index': '%s' % indexpos
-                }
-
-            }
-        }] '''        
         #print(requests)
-        r = self.DOCS.documents().batchUpdate(body={'requests': requests}, documentId=documentid, fields='').execute()
+        #r = self.DOCS.documents().batchUpdate(body={'requests': requests}, documentId=documentid, fields='').execute()
+        r = self.DOCS.documents().batchUpdate(body={'requests': requests}, 
+                documentId=documentid).execute()
+        time.sleep(4)
         #print(r)
 
         # Remove the placeholder text
@@ -154,16 +139,16 @@ class GooglePlanten():
         self.DOCS.documents().batchUpdate(body={'requests': requests}, documentId=documentid, fields='').execute()    
 
 
-        
+         
     def set_permissions_image(self, image):
         image_key = image.split("=")[1]
         filereqs = {
             'role': 'reader',
-            'type': 'anyone'                
+            'type': 'anyone'
         }
         #print("-- Update permissions file id %s " % image_key)
         a = self.DRIVE.permissions().create(fileId=image_key, body=filereqs).execute()
-        #print("Result of image permissions:", a)
+        print("Result of image permissions:", a)
 
     def update_sheet_last_editor(self):
         # Update the first cell, which makes us last editor
