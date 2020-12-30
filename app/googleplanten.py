@@ -87,10 +87,95 @@ class GooglePlanten():
                     'replaceText': '%s' % str(value).strip(),
                 }} for key, value in context]
 
+        template_doc = self.DOCS.documents().get(documentId=copy_id).execute()
+        content_template_doc = template_doc.get('body').get('content')
+
+        # Find the tables and remove rows with empty labels
+        for paragraph in content_template_doc:
+            if 'table' in paragraph:
+                table  = paragraph.get('table')
+                tableRows = table.get('tableRows')
+                current_row = 0
+                rows_deleted = 0
+
+                for rows in tableRows:
+                    key = False
+                    remove_row = False
+                    doc_key = False
+
+                    tableCells = rows.get('tableCells')[0]
+                    label = tableCells.get('content')[0].get('paragraph').get('elements')[0].get('textRun').get('content')
+                    
+                    for key, value in context:
+                        if self.translate_label_to_key(label) == key and value == '':
+                            startIndex = paragraph.get('startIndex')
+                            print("remove", label, startIndex, doc_key, current_row)
+                            requests = [
+                                {
+                                'deleteTableRow': {
+                                    'tableCellLocation': {
+                                        'tableStartLocation': {
+                                                'index': '%s' % startIndex
+                                        },
+                                        'rowIndex': '%s' % (current_row - rows_deleted)
+                                    }
+                                }
+                                }
+                            ]
+
+                            result = self.DOCS.documents().batchUpdate(documentId=copy_id, 
+                                        body={'requests': requests}).execute()
+
+                            rows_deleted = rows_deleted + 1
+                            continue
+                    
+                    current_row = current_row + 1
+                                        
+        # Remove any remaining empty field labels
+        for key, value in context:
+            if value == '':
+                doc_key = self.translate_label_to_key(key, True)
+                '''# Field 'Extra informatie' is 'bijzonderheden'
+                if key == 'bijzonderheden':
+                    key = 'Extra informatie'
+                if key == 'stamtakken':
+                    key = "Stam en takken"'''
+                reqs.append({'replaceAllText': {
+                    'containsText': {
+                        'text': '%s' % doc_key, 
+                    },
+                    'replaceText': '',
+                }})
+                
         # send requests to Docs API to do actual merge
         self.DOCS.documents().batchUpdate(body={'requests': reqs},
                 documentId=copy_id, fields='').execute()
         return copy_id
+
+
+    def translate_label_to_key(self, label, backward = False):
+        key_label = { 'stamtakken': 'Stam en takken',
+                'herfstverkleuring': 'Herfstverkleuring',
+                'hoogte': 'Hoogte',
+                'bodemvereisten': 'Bodemvereisten',
+                'zonschaduw': 'Lichtbehoefte',
+                'groeiwijze': 'Groeiwijze of -vorm',
+                'bloei': 'Bloeiperiode',
+                'bloeikleur': 'Bloeiwijze',
+                'vruchten': 'Vruchten',
+                'winterbeeld': 'Winterbeeld',
+                'verzorging': 'Verzorging',
+                'vermeerdering': 'Vermeerdering',
+                'bladvorm': 'Bladvorm en -kleur',
+                'bijzonderheden': 'Extra informatie',
+                'breedte': 'Breedte'}
+                
+        if backward:
+            return key_label.get(label)
+        else:
+            for el in key_label:
+                if key_label.get(el) in label:
+                    return el
 
 
     def replace_placeholder_image(self, documentid, image, image_uc, indexpos):
@@ -114,12 +199,10 @@ class GooglePlanten():
 
             }
         }] 
-        #print(requests)
-        #r = self.DOCS.documents().batchUpdate(body={'requests': requests}, documentId=documentid, fields='').execute()
+
         r = self.DOCS.documents().batchUpdate(body={'requests': requests}, 
                 documentId=documentid).execute()
         time.sleep(4)
-        #print(r)
 
         # Remove the placeholder text
         requests = [{'replaceAllText': {
@@ -194,9 +277,10 @@ class GooglePlanten():
             'groeiwijze': None,
             'winterbeeld': None,
             'vruchten': None,
+            'breedte': None,
             'bodemvereistenopmerkingen': None
         }      
-        COLUMNS = ['id','timestamp', 'plantnaamnl', 'soortplant', 'foto', 'plantnaamlt', 'hoogte', 'bodemvereisten', 'zonschaduw', 'bloei', 'bloeikleur', 'bladvorm', 'herfstverkleuring', 'vermeerdering', 'verzorging', 'bijzonderheden', 'stamtakken', 'groeiwijze', 'winterbeeld', 'vruchten', 'bodemvereistenopmerkingen' ]
+        COLUMNS = ['id','timestamp', 'plantnaamnl', 'soortplant', 'foto', 'plantnaamlt', 'hoogte', 'bodemvereisten', 'zonschaduw', 'bloei', 'bloeikleur', 'bladvorm', 'herfstverkleuring', 'vermeerdering', 'verzorging', 'bijzonderheden', 'stamtakken', 'groeiwijze', 'winterbeeld', 'vruchten', 'breedte', 'bodemvereistenopmerkingen' ]
         merged_data = []
 
         row_id = 1
@@ -215,7 +299,6 @@ class GooglePlanten():
                     row[key] = ""
             return_merged_data.append(row)
 
-        #print(return_merged_data)
         return return_merged_data
 
 
